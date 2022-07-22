@@ -15,6 +15,7 @@ const InterpolateHtmlPlugin = require('react-dev-utils/InterpolateHtmlPlugin');
 const WorkboxWebpackPlugin = require('workbox-webpack-plugin');
 const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
 const getCSSModuleLocalIdent = require('react-dev-utils/getCSSModuleLocalIdent');
+const loaderUtils = require('loader-utils');
 const ESLintPlugin = require('eslint-webpack-plugin');
 const paths = require('./paths');
 const modules = require('./modules');
@@ -84,6 +85,24 @@ const hasJsxRuntime = (() => {
     return false;
   }
 })();
+
+// Get shortened git hash
+const commitHash = require("./webpack/persistentCache/getCommitHash")(true);
+
+// Custom CSS Ident
+const hashLocalIdent = (context, _, exportName) => loaderUtils
+.getHashDigest(
+  Buffer.from(
+    `filePath:${path
+      .relative(context.rootContext, context.resourcePath)
+      .replace(/\\+/g, '/')}#className:${exportName}#BuildHash:${commitHash}#EnvHash:${createEnvironmentHash}`,
+  ),
+  'md4',
+  'hex',
+  6,
+)
+.replace(/^(-?\d|--)/, '_$1');
+
 
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
@@ -497,7 +516,7 @@ module.exports = function (webpackEnv) {
                   : isEnvDevelopment,
                 modules: {
                   mode: 'local',
-                  getLocalIdent: getCSSModuleLocalIdent,
+                  getLocalIdent: isEnvProduction ? hashLocalIdent : getCSSModuleLocalIdent,
                 },
               }),
             },
@@ -537,7 +556,7 @@ module.exports = function (webpackEnv) {
                     : isEnvDevelopment,
                   modules: {
                     mode: 'local',
-                    getLocalIdent: getCSSModuleLocalIdent,
+                    getLocalIdent: isEnvProduction ? hashLocalIdent : getCSSModuleLocalIdent,
                   },
                 },
                 'sass-loader'

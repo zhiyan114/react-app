@@ -83,6 +83,7 @@ checkBrowsers(paths.appPath, isInteractive)
             ' to the line before.\n'
         );
       } else {
+        console.log("Build Hash: "+ chalk.hex("#00FFFF").bold(require("../config/webpack/persistentCache/getCommitHash")(false)))
         console.log(chalk.green('Compiled successfully.\n'));
       }
 
