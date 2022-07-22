@@ -1,11 +1,11 @@
 const crypto = require("crypto")
-// Hash Generator
-module.exports = isShortHash => {
-    const result = require('child_process')
-        .execSync(`git rev-parse ${isShortHash ? "--short " : ""}HEAD`)
-        .toString()
-        .trim();
-    if(!result.startsWith("fatal")) return result;
-    // If git doesn't exist generate a random sha512 from current timestamp
-    return crypto.createHash("sha512").update(Date.now()).digest().slice(0, isShortHash ? 7 : 40);
-}
+// Create a consistant hash
+let result = require('child_process')
+    .execSync(`git rev-parse HEAD`)
+    .toString()
+    .trim();
+// Generate a random hash from current timestamp if the project does not have a git repository
+if(result.startsWith("fatal")) crypto.createHash("sha1").update(Date.now()).digest("hex");
+result = result.toLowerCase();
+
+module.exports = isShortHash => isShortHash ? result.slice(0,7) : result;
